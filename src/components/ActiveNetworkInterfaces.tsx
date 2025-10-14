@@ -1,42 +1,50 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
-import { RefreshCw, Wifi, AlertCircle, Loader, Server } from "lucide-react";
+import {
+  RefreshCw,
+  Wifi,
+  AlertCircle,
+  Loader,
+  CheckCircle,
+} from "lucide-react";
 
-function NetworkInterfaces() {
+function ActiveNetworkInterfaces() {
   const [interfaces, setInterfaces] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchNetworkInterfaces() {
+  async function fetchActiveNetworkInterfaces() {
     try {
       setLoading(true);
       setError(null);
-      const networkInterfaces: string[] = await invoke(
-        "get_list_of_network_interfaces"
+      const activeNetworkInterfaces: string[] = await invoke(
+        "get_active_network_interfaces"
       );
-      setInterfaces(networkInterfaces);
+      setInterfaces(activeNetworkInterfaces);
     } catch (err) {
-      setError("Failed to fetch network interfaces: " + (err as Error).message);
-      console.error("Error fetching network interfaces:", err);
+      setError(
+        "Failed to fetch active network interfaces: " + (err as Error).message
+      );
+      console.error("Error fetching active network interfaces:", err);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchNetworkInterfaces();
+    fetchActiveNetworkInterfaces();
   }, []);
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4">
+      <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white flex items-center">
-            <Server className="mr-2 h-6 w-6" />
-            All Network Interfaces
+            <Wifi className="mr-2 h-6 w-6" />
+            Active Network Interfaces
           </h2>
           <button
-            onClick={fetchNetworkInterfaces}
+            onClick={fetchActiveNetworkInterfaces}
             disabled={loading}
             className={`p-1.5 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-200 ${
               loading ? "animate-pulse" : ""
@@ -52,9 +60,9 @@ function NetworkInterfaces() {
       <div className="p-4">
         {loading && (
           <div className="flex flex-col items-center justify-center py-8">
-            <Loader className="animate-spin h-8 w-8 text-blue-500" />
+            <Loader className="animate-spin h-8 w-8 text-green-500" />
             <span className="mt-3 text-gray-600 text-sm">
-              Scanning network interfaces...
+              Scanning active network interfaces...
             </span>
           </div>
         )}
@@ -76,12 +84,13 @@ function NetworkInterfaces() {
           <div className="space-y-3">
             {interfaces.length === 0 ? (
               <div className="text-center py-6">
-                <Server className="mx-auto h-8 w-8 text-gray-400" />
+                <Wifi className="mx-auto h-8 w-8 text-gray-400" />
                 <h3 className="mt-1 text-base font-medium text-gray-900">
-                  No interfaces found
+                  No active interfaces found
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  No network interfaces were detected on your system.
+                  No actively connected network interfaces were detected on your
+                  system.
                 </p>
               </div>
             ) : (
@@ -89,17 +98,18 @@ function NetworkInterfaces() {
                 {interfaces.map((iface, index) => (
                   <div
                     key={index}
-                    className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-blue-300 hover:shadow transition-all duration-200 flex items-center"
+                    className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-green-300 hover:shadow transition-all duration-200 flex items-center"
                   >
-                    <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <Server className="h-5 w-5 text-blue-600" />
+                    <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
                     </div>
                     <div className="ml-3 overflow-hidden">
                       <p className="text-xs font-medium text-gray-900 truncate">
                         {iface}
                       </p>
-                      <div className="text-xs text-gray-500">
-                        Detected Interface
+                      <div className="text-xs text-gray-500 flex items-center">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                        Active
                       </div>
                     </div>
                   </div>
@@ -112,12 +122,12 @@ function NetworkInterfaces() {
         {!loading && (
           <div className="mt-4 flex justify-center">
             <button
-              onClick={fetchNetworkInterfaces}
+              onClick={fetchActiveNetworkInterfaces}
               disabled={loading}
               className={`inline-flex items-center px-3 py-1.5 rounded font-medium text-sm ${
                 loading
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-600 text-white shadow hover:shadow-md transition-all duration-200"
+                  : "bg-green-500 hover:bg-green-600 text-white shadow hover:shadow-md transition-all duration-200"
               }`}
             >
               <RefreshCw
@@ -132,4 +142,4 @@ function NetworkInterfaces() {
   );
 }
 
-export default NetworkInterfaces;
+export default ActiveNetworkInterfaces;

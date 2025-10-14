@@ -1,9 +1,17 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
-import { RefreshCw, Wifi, AlertCircle, Loader, Server } from "lucide-react";
+import { RefreshCw, Server, AlertCircle, Loader } from "lucide-react";
 
-function NetworkInterfaces() {
-  const [interfaces, setInterfaces] = useState<string[]>([]);
+interface NetworkInterfaceInfo {
+  name: string;
+  description: string;
+  is_up: boolean;
+  is_loopback: boolean;
+  ip_addresses: string[];
+}
+
+function AllInterfaces() {
+  const [interfaces, setInterfaces] = useState<NetworkInterfaceInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -11,8 +19,8 @@ function NetworkInterfaces() {
     try {
       setLoading(true);
       setError(null);
-      const networkInterfaces: string[] = await invoke(
-        "get_list_of_network_interfaces"
+      const networkInterfaces: NetworkInterfaceInfo[] = await invoke(
+        "get_all_network_interfaces"
       );
       setInterfaces(networkInterfaces);
     } catch (err) {
@@ -85,21 +93,55 @@ function NetworkInterfaces() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {interfaces.map((iface, index) => (
                   <div
                     key={index}
-                    className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-blue-300 hover:shadow transition-all duration-200 flex items-center"
+                    className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-blue-300 hover:shadow transition-all duration-200"
                   >
-                    <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <Server className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="ml-3 overflow-hidden">
-                      <p className="text-xs font-medium text-gray-900 truncate">
-                        {iface}
-                      </p>
-                      <div className="text-xs text-gray-500">
-                        Detected Interface
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Server className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="ml-3 overflow-hidden flex-1">
+                        <div className="flex justify-between">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {iface.name}
+                          </p>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              iface.is_up
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {iface.is_up ? "UP" : "DOWN"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 truncate">
+                          {iface.description}
+                        </p>
+                        <div className="mt-2">
+                          <p className="text-xs font-medium text-gray-700">
+                            IP Addresses:
+                          </p>
+                          {iface.ip_addresses.length > 0 ? (
+                            <ul className="mt-1 space-y-1">
+                              {iface.ip_addresses.map((ip, ipIndex) => (
+                                <li
+                                  key={ipIndex}
+                                  className="text-xs text-gray-600 truncate"
+                                >
+                                  {ip}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-xs text-gray-500 italic">
+                              No IP addresses assigned
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -132,4 +174,4 @@ function NetworkInterfaces() {
   );
 }
 
-export default NetworkInterfaces;
+export default AllInterfaces;
