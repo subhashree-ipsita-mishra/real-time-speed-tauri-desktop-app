@@ -16,3 +16,11 @@ pub struct SpeedTestResult {
     pub ping: f64,           // ms
     pub timestamp: u64,      // Unix timestamp
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct InterfaceSpeedData {
+    pub interface_name: String,
+    pub rx_speed: f64,  // Mbps
+    pub tx_speed: f64,  // Mbps
+    pub timestamp: u64, // Unix timestamp
+}

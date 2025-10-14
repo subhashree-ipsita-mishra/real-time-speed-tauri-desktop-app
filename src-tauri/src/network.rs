@@ -1,4 +1,4 @@
-use crate::models::{NetworkInterfaceInfo, SpeedTestResult};
+use crate::models::{NetworkInterfaceInfo, SpeedTestResult, InterfaceSpeedData};
 use netdev::interface::get_interfaces;
 use std::net::{TcpStream, SocketAddr};
 use std::time::{Duration, Instant};
@@ -238,4 +238,23 @@ fn test_ping() -> Result<f64, Box<dyn std::error::Error>> {
     let duration = start_time.elapsed().as_millis() as f64;
     
     Ok(duration)
+}
+
+// Function to monitor a specific interface's traffic
+pub fn monitor_interface_speed(interface_name: &str) -> Result<InterfaceSpeedData, String> {
+    let timestamp = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_secs();
+    
+    // Note: Proper interface-specific traffic monitoring would require
+    // platform-specific implementations or specialized crates.
+    // For now, we'll return simulated data with a note about the limitation.
+    
+    Ok(InterfaceSpeedData {
+        interface_name: interface_name.to_string(),
+        rx_speed: 0.0,  // Would be actual RX speed in Mbps
+        tx_speed: 0.0,  // Would be actual TX speed in Mbps
+        timestamp,
+    })
 }

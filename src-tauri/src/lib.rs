@@ -14,7 +14,8 @@ pub fn run() {
             commands::get_all_network_interfaces,
             commands::get_active_network_interfaces,
             commands::get_internet_connected_interfaces,
-            commands::run_speed_test
+            commands::run_speed_test,
+            commands::get_interface_speed_data
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
