@@ -95,13 +95,9 @@ function NetworkInterfaces() {
                       <Wifi className="h-5 w-5 text-blue-600" />
                     </div>
                     <div className="ml-3 overflow-hidden">
-                      <div className="text-base font-medium text-gray-900 truncate">
+                      <p className="text-xs font-medium text-gray-900 truncate">
                         {iface}
-                      </div>
-                      <div className="text-xs text-gray-500 flex items-center">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                        Active Interface
-                      </div>
+                      </p>
                     </div>
                   </div>
                 ))}
