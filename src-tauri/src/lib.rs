@@ -13,7 +13,8 @@ pub fn run() {
             commands::greet,
             commands::get_all_network_interfaces,
             commands::get_active_network_interfaces,
-            commands::get_internet_connected_interfaces
+            commands::get_internet_connected_interfaces,
+            commands::run_speed_test
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

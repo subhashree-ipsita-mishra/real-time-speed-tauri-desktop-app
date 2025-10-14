@@ -1,7 +1,12 @@
-use crate::models::NetworkInterfaceInfo;
+use crate::models::{NetworkInterfaceInfo, SpeedTestResult};
 use netdev::interface::get_interfaces;
 use std::net::{TcpStream, SocketAddr};
-use std::time::Duration;
+use std::time::{Duration, Instant};
+use std::time::SystemTime;
+
+// Speed test constants
+const DOWNLOAD_URL: &str = "http://speedtest.tele2.net/1MB.zip";
+const UPLOAD_URL: &str = "http://httpbin.org/post";
 
 pub fn get_all_interfaces() -> Result<Vec<NetworkInterfaceInfo>, String> {
     match std::panic::catch_unwind(|| {
@@ -132,4 +137,105 @@ fn check_internet_connectivity() -> bool {
     }
     
     false
+}
+
+// Real speed test implementation
+pub fn perform_speed_test() -> Result<SpeedTestResult, String> {
+    let timestamp = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_secs();
+    
+    // Test ping first
+    let ping = test_ping().unwrap_or(0.0);
+    
+    // Test download speed
+    let download_speed = match test_download_speed() {
+        Ok(speed) => speed,
+        Err(_) => 0.0, // Return 0 if test fails
+    };
+    
+    // Test upload speed
+    let upload_speed = match test_upload_speed() {
+        Ok(speed) => speed,
+        Err(_) => 0.0, // Return 0 if test fails
+    };
+    
+    Ok(SpeedTestResult {
+        download_speed,
+        upload_speed,
+        ping,
+        timestamp,
+    })
+}
+
+fn test_download_speed() -> Result<f64, Box<dyn std::error::Error>> {
+    let client = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(30))
+        .build()?;
+        
+    let start_time = Instant::now();
+    
+    let response = client.get(DOWNLOAD_URL).send()?;
+    if !response.status().is_success() {
+        return Err(format!("HTTP error: {}", response.status()).into());
+    }
+    
+    let bytes = response.bytes()?;
+    
+    let duration = start_time.elapsed().as_secs_f64();
+    if duration == 0.0 {
+        return Err("Download completed too quickly to measure".into());
+    }
+    
+    let speed_mbps = (bytes.len() as f64 * 8.0) / (duration * 1_000_000.0);
+    
+    Ok(speed_mbps)
+}
+
+fn test_upload_speed() -> Result<f64, Box<dyn std::error::Error>> {
+    let client = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(30))
+        .build()?;
+        
+    let start_time = Instant::now();
+    
+    // Create 1MB of test data
+    let test_data: Vec<u8> = vec![0; 1024 * 1024];
+    
+    let response = client
+        .post(UPLOAD_URL)
+        .body(test_data)
+        .send()?;
+        
+    if !response.status().is_success() {
+        return Err(format!("HTTP error: {}", response.status()).into());
+    }
+    
+    let duration = start_time.elapsed().as_secs_f64();
+    if duration == 0.0 {
+        return Err("Upload completed too quickly to measure".into());
+    }
+    
+    let speed_mbps = (1024.0 * 1024.0 * 8.0) / (duration * 1_000_000.0);
+    
+    Ok(speed_mbps)
+}
+
+fn test_ping() -> Result<f64, Box<dyn std::error::Error>> {
+    let client = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(10))
+        .build()?;
+        
+    let start_time = Instant::now();
+    
+    let response = client.get("https://httpbin.org/get").send()?;
+    
+    if !response.status().is_success() {
+        return Err(format!("HTTP error: {}", response.status()).into());
+    }
+    
+    let duration = start_time.elapsed().as_millis() as f64;
+    
+    Ok(duration)
 }

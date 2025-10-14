@@ -1,11 +1,12 @@
 import "./App.css";
 import { useState } from "react";
-import { Zap } from "lucide-react";
+import { Zap, Gauge } from "lucide-react";
 
 // We'll create these components
 import AllInterfaces from "./components/AllInterfaces";
 import ActiveInterfaces from "./components/ActiveInterfaces";
 import InternetConnectedInterfaces from "./components/InternetConnectedInterfaces";
+import SpeedTest from "./components/SpeedTest";
 
 function App() {
   const [activeTab, setActiveTab] = useState("all");
@@ -58,6 +59,17 @@ function App() {
                 Internet Connected
               </button>
               <button
+                onClick={() => setActiveTab("speed")}
+                className={`py-3 px-1 border-b-2 font-medium text-xs flex items-center ${
+                  activeTab === "speed"
+                    ? "border-red-500 text-red-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <Gauge className="mr-1 h-4 w-4" />
+                Speed Test
+              </button>
+              <button
                 onClick={() => setActiveTab("about")}
                 className={`py-3 px-1 border-b-2 font-medium text-xs ${
                   activeTab === "about"
@@ -74,6 +86,7 @@ function App() {
             {activeTab === "all" && <AllInterfaces />}
             {activeTab === "active" && <ActiveInterfaces />}
             {activeTab === "connected" && <InternetConnectedInterfaces />}
+            {activeTab === "speed" && <SpeedTest />}
             {activeTab === "about" && (
               <div className="bg-white rounded-lg shadow p-4 text-center">
                 <h2 className="text-lg font-bold text-gray-800 mb-2">
@@ -95,6 +108,10 @@ function App() {
                   <li className="mb-1">
                     • <strong>Internet Connected</strong>: Shows only interfaces
                     with actual internet connectivity
+                  </li>
+                  <li className="mb-1">
+                    • <strong>Speed Test</strong>: Measures your network's
+                    download and upload speeds
                   </li>
                 </ul>
               </div>
