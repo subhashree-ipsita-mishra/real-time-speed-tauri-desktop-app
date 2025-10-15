@@ -1,13 +1,13 @@
 import "./App.css";
-import { useState } from "react";
 import GreetingCard from "./components/GreetingCard";
 import PowerShellCard from "./components/PowerShellCard";
 import TimeCard from "./components/TimeCard";
 import NetworkCard from "./components/NetworkCard";
 import NetworkAdapterCard from "./components/NetworkAdapterCard";
+import { useSelectionStore } from "./store/selection-store";
 
 export default function App() {
-  const [selectedView, setSelectedView] = useState<string>("all");
+  const { selectedView, setSelectedView } = useSelectionStore();
 
   const renderCards = () => {
     if (selectedView === "all") {
