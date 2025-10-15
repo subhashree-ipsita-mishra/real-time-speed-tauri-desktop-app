@@ -1,6 +1,7 @@
 mod commands;
 mod time_commands;
 mod network_commands;
+mod adapter_commands;
 
 use tauri_plugin_opener;
 
@@ -17,7 +18,8 @@ pub fn run() {
             greet,
             commands::run_powershell_script,
             time_commands::get_time_from_powershell,
-            network_commands::get_network_stats
+            network_commands::get_network_stats,
+            adapter_commands::get_network_adapters
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
