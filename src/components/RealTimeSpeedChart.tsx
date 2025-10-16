@@ -45,20 +45,23 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
     startMonitoring,
     stopMonitoring,
     adapters,
+    fetchAdapters,
   } = useNetworkAdapterStore();
 
   const [displayData, setDisplayData] = useState<any[]>([]);
   const chartRef = useRef<any>(null);
 
-  // Start monitoring when component mounts
+  // Start monitoring and fetch adapters when component mounts
   useEffect(() => {
     startMonitoring(updateInterval, maxDataPoints);
+    // Also fetch adapter details to get interface types for icons
+    fetchAdapters().catch(error => console.error("Error fetching adapters:", error));
 
     // Cleanup when component unmounts
     return () => {
       stopMonitoring();
     };
-  }, [startMonitoring, stopMonitoring, updateInterval, maxDataPoints]);
+  }, [startMonitoring, stopMonitoring, fetchAdapters, updateInterval, maxDataPoints]);
 
   // Process new data efficiently
   useEffect(() => {
@@ -90,30 +93,19 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
 
   // Function to find matching adapter for a network stat by name/description
   const getMatchingAdapter = (statName: string) => {
-    // Debug logging
-    console.log("getMatchingAdapter called with:", statName);
-    console.log("Available adapters:", adapters);
-    
     // First try exact name match
     const exactMatch = adapters.find(adapter => 
       normalizeName(adapter.Name) === normalizeName(statName)
     );
-    if (exactMatch) {
-      console.log("Found exact match:", exactMatch);
-      return exactMatch;
-    }
+    if (exactMatch) return exactMatch;
     
     // Then try matching against InterfaceDescription
     const descMatch = adapters.find(adapter => 
       normalizeName(adapter.InterfaceDescription).includes(normalizeName(statName)) || 
       normalizeName(statName).includes(normalizeName(adapter.InterfaceDescription))
     );
-    if (descMatch) {
-      console.log("Found description match:", descMatch);
-      return descMatch;
-    }
+    if (descMatch) return descMatch;
     
-    console.log("No match found for:", statName);
     return null;
   };
 

@@ -141,8 +141,19 @@ export const useNetworkAdapterStore = create<NetworkAdapterStore>()((set, get) =
         const result = await invoke<string>('get_network_stats');
         const parsedStats = parseNetworkStats(result);
         
-        // Update active adapters if they changed
-        const currentAdapters = parsedStats.map(stat => stat.name);
+        // Filter stats to only include adapters that are in the stored adapters list
+        const storedAdapters = get().adapters;
+        const filteredStats = parsedStats.filter(stat => {
+          // Check if any stored adapter matches this stat name
+          return storedAdapters.some(adapter => 
+            adapter.Name.toLowerCase().replace(/[^a-z0-9]/g, '') === stat.name.toLowerCase().replace(/[^a-z0-9]/g, '') ||
+            adapter.InterfaceDescription.toLowerCase().replace(/[^a-z0-9]/g, '').includes(stat.name.toLowerCase().replace(/[^a-z0-9]/g, '')) ||
+            stat.name.toLowerCase().replace(/[^a-z0-9]/g, '').includes(adapter.InterfaceDescription.toLowerCase().replace(/[^a-z0-9]/g, ''))
+          );
+        });
+        
+        // Update active adapters if they changed (only for filtered adapters)
+        const currentAdapters = filteredStats.map(stat => stat.name);
         const prevAdapters = get().activeAdapters;
         if (JSON.stringify(currentAdapters) !== JSON.stringify(prevAdapters)) {
           set({ activeAdapters: currentAdapters });
@@ -153,7 +164,7 @@ export const useNetworkAdapterStore = create<NetworkAdapterStore>()((set, get) =
           timestamp: new Date().toLocaleTimeString(),
         };
 
-        parsedStats.forEach(stat => {
+        filteredStats.forEach(stat => {
           newPoint[stat.name] = stat.value;
         });
 
