@@ -214,7 +214,7 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
         <div className="text-sm">
           <p className="font-medium text-gray-700 mb-2">Active Network Adapters:</p>
           {activeAdapters.length > 0 ? (
-            <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
               {activeAdapters.map((adapter, index) => {
                 const matchingAdapter = getMatchingAdapter(adapter);
                 const icon = matchingAdapter ? getAdapterIcon(adapter) : 
@@ -224,23 +224,20 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
                 return (
                   <div
                     key={index}
-                    className="p-2 rounded border flex items-center justify-between bg-white"
+                    className="flex items-center p-2 bg-gray-100 rounded border"
                     style={{
                       borderLeft: `4px solid hsl(${
                         activeAdapters.indexOf(adapter) * 137.5
                       }, 70%, 50%)`,
                     }}
                   >
-                    <div className="flex items-center">
-                      {icon}
-                      <div>
-                        <span className="font-medium">{adapter}</span>
-                        <span className="ml-2 text-xs bg-gray-200 rounded px-2 py-0.5">
-                          {type}
-                        </span>
+                    {icon}
+                    <div>
+                      <span className="font-medium text-sm">{adapter}</span>
+                      <div className="text-xs bg-gray-200 rounded px-1.5 py-0.5 ml-1">
+                        {type}
                       </div>
                     </div>
-                    <span className="text-xs text-gray-500">Active</span>
                   </div>
                 );
               })}
