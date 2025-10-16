@@ -1,4 +1,23 @@
-import { useNetworkAdapterStore } from "../store/network-adapter-store";
+import { useNetworkAdapterStore, interfaceTypeToString } from "../store/network-adapter-store";
+import { Wifi, EthernetPort, Radio, Smartphone, Network } from "lucide-react";
+
+// Function to get the appropriate icon for adapter type
+const getAdapterIcon = (adapterType: number) => {
+  const type = interfaceTypeToString(adapterType);
+  switch (type) {
+    case "WiFi":
+      return <Wifi size={16} className="mr-2 text-blue-500" />;
+    case "Ethernet":
+    case "Fast Ethernet":
+      return <EthernetPort size={16} className="mr-2 text-green-500" />;
+    case "Cellular":
+      return <Smartphone size={16} className="mr-2 text-purple-500" />;
+    case "WiMAX":
+      return <Radio size={16} className="mr-2 text-orange-500" />;
+    default:
+      return <Network size={16} className="mr-2 text-gray-500" />; // Generic network icon
+  }
+};
 
 export default function NetworkAdapterCard() {
   const { adapters, isLoading, error, fetchAdapters, clearAdapters } = useNetworkAdapterStore();
@@ -6,31 +25,32 @@ export default function NetworkAdapterCard() {
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">Network Adapters</h2>
-      <div className="text-sm text-left text-gray-600 mb-4 bg-gray-50 p-3 rounded overflow-x-auto max-h-40">
+      <div className="text-sm text-left text-gray-600 mb-4 bg-gray-50 p-3 rounded max-h-60 overflow-y-auto">
         {error && <div className="text-red-500">Error: {error}</div>}
         {isLoading ? (
           <div>Fetching adapter information...</div>
         ) : adapters.length > 0 ? (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Index</th>
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Speed</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {adapters.map((adapter, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm">{adapter.Name}</td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm">{adapter.InterfaceDescription}</td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm">{adapter.ifIndex}</td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm">{adapter.LinkSpeed}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="space-y-3">
+            {adapters.map((adapter, index) => (
+              <div 
+                key={index} 
+                className={`p-3 rounded border ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+              >
+                <div className="flex items-center mb-1">
+                  {getAdapterIcon(adapter.InterfaceType)}
+                  <span className="font-medium">{adapter.Name}</span>
+                  <span className="ml-2 text-xs bg-gray-200 rounded px-2 py-0.5">
+                    {interfaceTypeToString(adapter.InterfaceType)}
+                  </span>
+                </div>
+                <div className="text-xs ml-6 text-gray-600">
+                  <div><span className="font-medium">Description:</span> {adapter.InterfaceDescription}</div>
+                  <div><span className="font-medium">Speed:</span> {adapter.LinkSpeed}</div>
+                  <div><span className="font-medium">Index:</span> {adapter.ifIndex}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div>Click the button to get adapter info</div>
         )}
