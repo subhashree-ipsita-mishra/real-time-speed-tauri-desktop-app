@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
-} from 'recharts';
-import { useNetworkAdapterStore } from '../store/network-adapter-store';
+import React, { useEffect, useRef, useState } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { useNetworkAdapterStore } from "../store/network-adapter-store";
 
 interface RealTimeSpeedChartProps {
   updateInterval?: number;
@@ -18,13 +18,13 @@ interface RealTimeSpeedChartProps {
 
 // Function to format bytes to human-readable format (KB, MB, GB)
 const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 B/s';
-  
+  if (bytes === 0) return "0 B/s";
+
   const k = 1024;
-  const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s'];
+  const sizes = ["B/s", "KB/s", "MB/s", "GB/s", "TB/s"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
 // Function to format bytes for Y-axis ticks
@@ -32,9 +32,9 @@ const formatYAxis = (value: number): string => {
   return formatBytes(value);
 };
 
-const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({ 
+const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
   updateInterval = 2000, // Update every 2 seconds
-  maxDataPoints = 20 // Keep only last 20 data points
+  maxDataPoints = 20, // Keep only last 20 data points
 }) => {
   const {
     speedData,
@@ -42,16 +42,16 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
     isMonitoring,
     speedError,
     startMonitoring,
-    stopMonitoring
+    stopMonitoring,
   } = useNetworkAdapterStore();
-  
+
   const [displayData, setDisplayData] = useState<any[]>([]);
   const chartRef = useRef<any>(null);
 
   // Start monitoring when component mounts
   useEffect(() => {
     startMonitoring(updateInterval, maxDataPoints);
-    
+
     // Cleanup when component unmounts
     return () => {
       stopMonitoring();
@@ -68,7 +68,7 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
   }, [speedData, maxDataPoints]);
 
   // Prepare chart data with all adapters
-  const chartLines = activeAdapters.map(adapter => (
+  const chartLines = activeAdapters.map((adapter) => (
     <Line
       key={adapter}
       type="monotone"
@@ -83,14 +83,14 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">Real-Time Network Speed</h2>
-      
+      <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
+        Real-Time Network Speed
+      </h2>
+
       {speedError && (
-        <div className="text-red-500 text-center mb-4">
-          Error: {speedError}
-        </div>
+        <div className="text-red-500 text-center mb-4">Error: {speedError}</div>
       )}
-      
+
       {isMonitoring && speedData.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           Collecting initial data...
@@ -101,53 +101,86 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
             <LineChart
               ref={chartRef}
               data={displayData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 50 }}
+              margin={{ top: 5, right: 30, left: 50, bottom: 60 }} // Increased left margin from 30 to 50
               // Optimize re-rendering
               style={{ fontSize: 12 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="timestamp" 
+              <XAxis
+                dataKey="timestamp"
                 angle={-45}
                 textAnchor="end"
-                height={60}
+                height={70} // Increased height for better timestamp display
                 tick={{ fontSize: 10 }}
               />
-              <YAxis 
-                label={{ 
-                  value: 'Speed', 
-                  angle: -90, 
-                  position: 'insideLeft',
-                  style: { textAnchor: 'middle', fontSize: 12 }
+              <YAxis
+                label={{
+                  value: "Speed",
+                  angle: -90,
+                  position: "left",
+                  offset: 20, // Add offset to move label further left
+                  style: { textAnchor: "middle", fontSize: 12 },
                 }}
                 tick={{ fontSize: 10 }}
                 tickFormatter={formatYAxis}
               />
-              <Tooltip 
-                formatter={(value) => [formatBytes(Number(value)), 'Speed']}
+              <Tooltip
+                formatter={(value) => [formatBytes(Number(value)), "Speed"]}
                 labelFormatter={(label) => `Time: ${label}`}
                 contentStyle={{ fontSize: 12 }}
               />
-              <Legend 
-                layout="horizontal" 
-                verticalAlign="top" 
+              <Legend
+                layout="horizontal"
+                verticalAlign="top"
                 height={40}
-                wrapperStyle={{ paddingBottom: '10px', fontSize: 12 }}
+                wrapperStyle={{ paddingBottom: "10px", fontSize: 12 }}
               />
               {chartLines}
             </LineChart>
           </ResponsiveContainer>
         </div>
       )}
-      
-      <div className="mt-4 text-sm text-gray-600 flex justify-between items-center">
-        <div>
-          <p className="mb-1">Active Network Adapters: {activeAdapters.join(', ') || 'None detected'}</p>
-          <p>Update interval: {updateInterval / 1000}s | Max points: {maxDataPoints}</p>
+
+      {/* Network adapter list moved below the chart */}
+      <div className="mt-6">
+        <div className="mb-2 text-sm">
+          <p className="font-medium text-gray-700">Active Network Adapters:</p>
+          {activeAdapters.length > 0 ? (
+            <div className="mt-1 flex flex-wrap gap-2">
+              {activeAdapters.map((adapter, index) => (
+                <span
+                  key={index}
+                  className="inline-block px-2 py-1 bg-gray-100 rounded text-xs"
+                  style={{
+                    borderLeft: `3px solid hsl(${
+                      activeAdapters.indexOf(adapter) * 137.5
+                    }, 70%, 50%)`,
+                  }}
+                >
+                  {adapter}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">No network adapters detected</p>
+          )}
         </div>
-        <div className="flex items-center">
-          <span className={`inline-block w-3 h-3 rounded-full mr-2 ${isMonitoring ? 'bg-green-500' : 'bg-gray-500'}`}></span>
-          <span>{isMonitoring ? 'Monitoring' : 'Stopped'}</span>
+
+        <div className="flex justify-between items-center text-sm text-gray-600">
+          <div>
+            <p>
+              Update interval: {updateInterval / 1000}s | Max points:{" "}
+              {maxDataPoints}
+            </p>
+          </div>
+          <div className="flex items-center">
+            <span
+              className={`inline-block w-3 h-3 rounded-full mr-2 ${
+                isMonitoring ? "bg-green-500" : "bg-gray-500"
+              }`}
+            ></span>
+            <span>{isMonitoring ? "Monitoring" : "Stopped"}</span>
+          </div>
         </div>
       </div>
     </div>
