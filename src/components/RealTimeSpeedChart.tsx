@@ -54,6 +54,10 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
 
   const [displayData, setDisplayData] = useState<any[]>([]);
   const chartRef = useRef<any>(null);
+  // State to track which adapters are visible in the chart
+  const [visibleAdapters, setVisibleAdapters] = useState<Set<string>>(
+    new Set()
+  );
 
   // Start monitoring and fetch adapters when component mounts
   useEffect(() => {
@@ -84,6 +88,31 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
     }
   }, [speedData, maxDataPoints]);
 
+  // Initialize visible adapters when activeAdapters change
+  useEffect(() => {
+    const filtered = activeAdapters.filter((activeAdapter) => {
+      return adapters
+        .map((adapter) => adapter.InterfaceDescription.toLowerCase())
+        .includes(activeAdapter.toLowerCase());
+    });
+
+    // Set all filtered adapters as visible by default
+    setVisibleAdapters(new Set(filtered));
+  }, [activeAdapters, adapters]);
+
+  // Toggle adapter visibility
+  const toggleAdapterVisibility = (adapterName: string) => {
+    setVisibleAdapters((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(adapterName)) {
+        newSet.delete(adapterName);
+      } else {
+        newSet.add(adapterName);
+      }
+      return newSet;
+    });
+  };
+
   // Prepare chart data with filtered adapters
   const filteredAdapters = activeAdapters.filter((activeAdapter) => {
     return adapters
@@ -91,18 +120,20 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
       .includes(activeAdapter.toLowerCase());
   });
 
-  const chartLines = filteredAdapters.map((adapter) => (
-    <Line
-      key={adapter}
-      type="monotone"
-      dataKey={adapter}
-      stroke={`hsl(${filteredAdapters.indexOf(adapter) * 137.5}, 70%, 50%)`} // Generate distinct colors
-      strokeWidth={2}
-      dot={false}
-      activeDot={{ r: 6 }}
-      isAnimationActive={false} // Disable animation for better performance
-    />
-  ));
+  const chartLines = filteredAdapters
+    .filter((adapter) => visibleAdapters.has(adapter)) // Only show visible adapters
+    .map((adapter) => (
+      <Line
+        key={adapter}
+        type="monotone"
+        dataKey={adapter}
+        stroke={`hsl(${filteredAdapters.indexOf(adapter) * 137.5}, 70%, 50%)`} // Generate distinct colors
+        strokeWidth={2}
+        dot={false}
+        activeDot={{ r: 6 }}
+        isAnimationActive={false} // Disable animation for better performance
+      />
+    ));
 
   // Function to normalize names for comparison (case-insensitive, remove special chars)
   const normalizeName = (name: string): string => {
@@ -242,6 +273,7 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
                 const type = matchingAdapter
                   ? getAdapterTypeDisplay(adapter)
                   : "Unknown";
+                const isVisible = visibleAdapters.has(adapter);
 
                 return (
                   <div
@@ -254,11 +286,22 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
                     }}
                   >
                     {icon}
-                    <div>
+                    <div className="flex-1">
                       <span className="font-medium text-sm">{adapter}</span>
                       <div className="text-xs bg-gray-200 rounded px-1.5 py-0.5 ml-1">
                         {type}
                       </div>
+                    </div>
+                    <div className="ml-2">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={isVisible}
+                          onChange={() => toggleAdapterVisibility(adapter)}
+                        />
+                        <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
                     </div>
                   </div>
                 );
