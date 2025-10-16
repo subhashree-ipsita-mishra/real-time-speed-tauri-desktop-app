@@ -84,13 +84,19 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
     }
   }, [speedData, maxDataPoints]);
 
-  // Prepare chart data with all adapters
-  const chartLines = activeAdapters.map((adapter) => (
+  // Prepare chart data with filtered adapters
+  const filteredAdapters = activeAdapters.filter((activeAdapter) => {
+    return adapters
+      .map((adapter) => adapter.InterfaceDescription.toLowerCase())
+      .includes(activeAdapter.toLowerCase());
+  });
+
+  const chartLines = filteredAdapters.map((adapter) => (
     <Line
       key={adapter}
       type="monotone"
       dataKey={adapter}
-      stroke={`hsl(${activeAdapters.indexOf(adapter) * 137.5}, 70%, 50%)`} // Generate distinct colors
+      stroke={`hsl(${filteredAdapters.indexOf(adapter) * 137.5}, 70%, 50%)`} // Generate distinct colors
       strokeWidth={2}
       dot={false}
       activeDot={{ r: 6 }}
@@ -224,47 +230,39 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
           <p className="font-medium text-gray-700 mb-2">
             Active Network Adapters:
           </p>
-          {activeAdapters.length > 0 ? (
+          {filteredAdapters.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {activeAdapters
-                .filter((activeAdapter) => {
-                  return adapters
-                    .map((adapter) =>
-                      adapter.InterfaceDescription.toLowerCase()
-                    )
-                    .includes(activeAdapter.toLowerCase());
-                })
-                .map((adapter, index) => {
-                  const matchingAdapter = getMatchingAdapter(adapter);
-                  const icon = matchingAdapter ? (
-                    getAdapterIcon(adapter)
-                  ) : (
-                    <Radio size={16} className="mr-2 text-gray-500" />
-                  );
-                  const type = matchingAdapter
-                    ? getAdapterTypeDisplay(adapter)
-                    : "Unknown";
+              {filteredAdapters.map((adapter, index) => {
+                const matchingAdapter = getMatchingAdapter(adapter);
+                const icon = matchingAdapter ? (
+                  getAdapterIcon(adapter)
+                ) : (
+                  <Radio size={16} className="mr-2 text-gray-500" />
+                );
+                const type = matchingAdapter
+                  ? getAdapterTypeDisplay(adapter)
+                  : "Unknown";
 
-                  return (
-                    <div
-                      key={index}
-                      className="flex items-center p-2 bg-gray-100 rounded border"
-                      style={{
-                        borderLeft: `4px solid hsl(${
-                          activeAdapters.indexOf(adapter) * 137.5
-                        }, 70%, 50%)`,
-                      }}
-                    >
-                      {icon}
-                      <div>
-                        <span className="font-medium text-sm">{adapter}</span>
-                        <div className="text-xs bg-gray-200 rounded px-1.5 py-0.5 ml-1">
-                          {type}
-                        </div>
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center p-2 bg-gray-100 rounded border"
+                    style={{
+                      borderLeft: `4px solid hsl(${
+                        filteredAdapters.indexOf(adapter) * 137.5
+                      }, 70%, 50%)`,
+                    }}
+                  >
+                    {icon}
+                    <div>
+                      <span className="font-medium text-sm">{adapter}</span>
+                      <div className="text-xs bg-gray-200 rounded px-1.5 py-0.5 ml-1">
+                        {type}
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-500 italic py-2">
