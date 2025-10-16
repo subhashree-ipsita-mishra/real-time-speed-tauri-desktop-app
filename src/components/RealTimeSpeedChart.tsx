@@ -90,19 +90,30 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
 
   // Function to find matching adapter for a network stat by name/description
   const getMatchingAdapter = (statName: string) => {
+    // Debug logging
+    console.log("getMatchingAdapter called with:", statName);
+    console.log("Available adapters:", adapters);
+    
     // First try exact name match
     const exactMatch = adapters.find(adapter => 
       normalizeName(adapter.Name) === normalizeName(statName)
     );
-    if (exactMatch) return exactMatch;
+    if (exactMatch) {
+      console.log("Found exact match:", exactMatch);
+      return exactMatch;
+    }
     
     // Then try matching against InterfaceDescription
     const descMatch = adapters.find(adapter => 
       normalizeName(adapter.InterfaceDescription).includes(normalizeName(statName)) || 
       normalizeName(statName).includes(normalizeName(adapter.InterfaceDescription))
     );
-    if (descMatch) return descMatch;
+    if (descMatch) {
+      console.log("Found description match:", descMatch);
+      return descMatch;
+    }
     
+    console.log("No match found for:", statName);
     return null;
   };
 
@@ -126,6 +137,16 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
       }
     }
     return <Radio size={12} className="mr-1" />; // Default icon if adapter not found
+  };
+
+  // Remove debugging logs for production
+  // Function to get the adapter type name for display
+  const getAdapterTypeDisplay = (adapterName: string): string => {
+    const matchingAdapter = getMatchingAdapter(adapterName);
+    if (matchingAdapter) {
+      return interfaceTypeToString(matchingAdapter.InterfaceType);
+    }
+    return "Unknown";
   };
 
   return (
@@ -194,23 +215,32 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
           <p className="font-medium text-gray-700">Active Network Adapters:</p>
           {activeAdapters.length > 0 ? (
             <div className="mt-1 flex flex-wrap gap-2">
-              {activeAdapters.map((adapter, index) => (
-                <span
-                  key={index}
-                  className="inline-block px-2 py-1 bg-gray-100 rounded text-xs flex items-center"
-                  style={{
-                    borderLeft: `3px solid hsl(${
-                      activeAdapters.indexOf(adapter) * 137.5
-                    }, 70%, 50%)`,
-                  }}
-                >
-                  {getAdapterIcon(adapter)}
-                  <span>{adapter}</span>
-                  <span className="ml-1 text-[0.6rem] text-gray-500">
-                    ({getAdapterType(adapters, adapter)})
+              {activeAdapters.map((adapter, index) => {
+                const matchingAdapter = getMatchingAdapter(adapter);
+                const icon = matchingAdapter ? getAdapterIcon(adapter) : 
+                             <Radio size={12} className="mr-1" />;
+                const type = matchingAdapter ? getAdapterTypeDisplay(adapter) : "Unknown";
+                
+                return (
+                  <span
+                    key={index}
+                    className="inline-block px-2 py-1 bg-gray-100 rounded text-xs flex items-center"
+                    style={{
+                      borderLeft: `3px solid hsl(${
+                        activeAdapters.indexOf(adapter) * 137.5
+                      }, 70%, 50%)`,
+                    }}
+                  >
+                    {icon}
+                    <div>
+                      <span>{adapter}</span>
+                      <span className="ml-1 text-[0.6rem] bg-gray-200 rounded px-1 py-0.5">
+                        {type}
+                      </span>
+                    </div>
                   </span>
-                </span>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-500 italic">No network adapters detected</p>
