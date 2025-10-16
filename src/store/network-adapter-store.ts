@@ -30,7 +30,8 @@ interface NetworkAdapterStore {
   activeAdapters: string[];
   isMonitoring: boolean;
   speedError: string | null;
-  startMonitoring: (updateInterval?: number) => void;
+  maxDataPoints: number;
+  startMonitoring: (updateInterval?: number, maxDataPoints?: number) => void;
   stopMonitoring: () => void;
   clearSpeedData: () => void;
 }
@@ -100,10 +101,11 @@ export const useNetworkAdapterStore = create<NetworkAdapterStore>()((set, get) =
   activeAdapters: [],
   isMonitoring: false,
   speedError: null,
-  startMonitoring: (updateInterval = 2000) => {
+  maxDataPoints: 20,
+  startMonitoring: (updateInterval = 2000, maxDataPoints = 20) => {
     if (get().isMonitoring) return; // Already monitoring
     
-    set({ isMonitoring: true, speedError: null });
+    set({ isMonitoring: true, speedError: null, maxDataPoints });
     
     const intervalId = setInterval(async () => {
       try {
@@ -126,9 +128,9 @@ export const useNetworkAdapterStore = create<NetworkAdapterStore>()((set, get) =
           newPoint[stat.name] = stat.value;
         });
 
-        // Add to chart data and keep only last 20 points
+        // Add to chart data and keep only the specified number of points
         set((state) => ({
-          speedData: [...state.speedData.slice(-19), newPoint],
+          speedData: [...state.speedData.slice(-(maxDataPoints - 1)), newPoint],
           speedError: null
         }));
       } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   LineChart, 
   Line, 
@@ -13,10 +13,12 @@ import { useNetworkAdapterStore } from '../store/network-adapter-store';
 
 interface RealTimeSpeedChartProps {
   updateInterval?: number;
+  maxDataPoints?: number; // Maximum number of data points to display
 }
 
 const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({ 
-  updateInterval = 2000 // Update every 2 seconds
+  updateInterval = 2000, // Update every 2 seconds
+  maxDataPoints = 20 // Keep only last 20 data points
 }) => {
   const {
     speedData,
@@ -26,16 +28,28 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
     startMonitoring,
     stopMonitoring
   } = useNetworkAdapterStore();
+  
+  const [displayData, setDisplayData] = useState<any[]>([]);
+  const chartRef = useRef<any>(null);
 
   // Start monitoring when component mounts
   useEffect(() => {
-    startMonitoring(updateInterval);
+    startMonitoring(updateInterval, maxDataPoints);
     
     // Cleanup when component unmounts
     return () => {
       stopMonitoring();
     };
-  }, [startMonitoring, stopMonitoring, updateInterval]);
+  }, [startMonitoring, stopMonitoring, updateInterval, maxDataPoints]);
+
+  // Process new data efficiently
+  useEffect(() => {
+    if (speedData.length > 0) {
+      // Use only the latest data points to prevent chart from becoming too crowded
+      const newData = [...speedData].slice(-maxDataPoints);
+      setDisplayData(newData);
+    }
+  }, [speedData, maxDataPoints]);
 
   // Prepare chart data with all adapters
   const chartLines = activeAdapters.map(adapter => (
@@ -47,6 +61,7 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
       strokeWidth={2}
       dot={false}
       activeDot={{ r: 6 }}
+      isAnimationActive={false} // Disable animation for better performance
     />
   ));
 
@@ -68,8 +83,11 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={speedData}
+              ref={chartRef}
+              data={displayData}
               margin={{ top: 5, right: 30, left: 20, bottom: 50 }}
+              // Optimize re-rendering
+              style={{ fontSize: 12 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -77,7 +95,7 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
                 angle={-45}
                 textAnchor="end"
                 height={60}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 10 }}
               />
               <YAxis 
                 label={{ 
@@ -86,17 +104,18 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
                   position: 'insideLeft',
                   style: { textAnchor: 'middle', fontSize: 12 }
                 }}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 10 }}
               />
               <Tooltip 
                 formatter={(value) => [`${Number(value).toLocaleString()} bytes/s`, 'Speed']}
                 labelFormatter={(label) => `Time: ${label}`}
+                contentStyle={{ fontSize: 12 }}
               />
               <Legend 
                 layout="horizontal" 
                 verticalAlign="top" 
                 height={40}
-                wrapperStyle={{ paddingBottom: '10px' }}
+                wrapperStyle={{ paddingBottom: '10px', fontSize: 12 }}
               />
               {chartLines}
             </LineChart>
@@ -107,7 +126,7 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
       <div className="mt-4 text-sm text-gray-600 flex justify-between items-center">
         <div>
           <p className="mb-1">Active Network Adapters: {activeAdapters.join(', ') || 'None detected'}</p>
-          <p>Update interval: {updateInterval / 1000}s</p>
+          <p>Update interval: {updateInterval / 1000}s | Max points: {maxDataPoints}</p>
         </div>
         <div className="flex items-center">
           <span className={`inline-block w-3 h-3 rounded-full mr-2 ${isMonitoring ? 'bg-green-500' : 'bg-gray-500'}`}></span>
