@@ -1,24 +1,23 @@
+import { EthernetPort, Radio, Smartphone, Wifi } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  AreaChart,
   Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
 import {
-  useNetworkAdapterStore,
-  getAdapterType,
   interfaceTypeToString,
+  useNetworkAdapterStore,
 } from "../store/network-adapter-store";
-import { Wifi, EthernetPort, Radio, Smartphone } from "lucide-react";
 
 interface RealTimeSpeedChartProps {
   updateInterval?: number;
