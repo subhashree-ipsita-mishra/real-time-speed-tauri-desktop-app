@@ -13,13 +13,23 @@ export default function App() {
   const renderCards = () => {
     if (selectedView === "all") {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          <GreetingCard />
-          <PowerShellCard />
-          <TimeCard />
-          <NetworkCard />
-          <NetworkAdapterCard />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 max-w-7xl mx-auto">
           <div className="lg:col-span-2">
+            <GreetingCard />
+          </div>
+          <div className="lg:col-span-2">
+            <PowerShellCard />
+          </div>
+          <div className="lg:col-span-2">
+            <TimeCard />
+          </div>
+          <div className="lg:col-span-3">
+            <NetworkCard />
+          </div>
+          <div className="lg:col-span-3">
+            <NetworkAdapterCard />
+          </div>
+          <div className="lg:col-span-6">
             <RealTimeSpeedChart />
           </div>
         </div>
