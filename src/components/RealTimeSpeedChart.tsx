@@ -62,6 +62,8 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
   const [visibleAdapters, setVisibleAdapters] = useState<Set<string>>(
     new Set()
   );
+  // State for aggregate speed toggle (default enabled)
+  const [showAggregateSpeed, setShowAggregateSpeed] = useState<boolean>(true);
 
   // State for chart type
   const [chartType, setChartType] = useState<"line" | "bar" | "area">("line");
@@ -120,11 +122,33 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
     });
   };
 
+  // Toggle aggregate speed visibility
+  const toggleAggregateSpeed = () => {
+    setShowAggregateSpeed((prev) => !prev);
+  };
+
   // Prepare chart data with filtered adapters
   const filteredAdapters = activeAdapters.filter((activeAdapter) => {
     return adapters
       .map((adapter) => adapter.InterfaceDescription.toLowerCase())
       .includes(activeAdapter.toLowerCase());
+  });
+
+  // Calculate aggregate speed for visible adapters
+  const displayDataWithAggregate = displayData.map((dataPoint) => {
+    if (!showAggregateSpeed) return dataPoint;
+
+    const aggregateValue = filteredAdapters
+      .filter((adapter) => visibleAdapters.has(adapter))
+      .reduce((sum, adapter) => {
+        const value = dataPoint[adapter] || 0;
+        return sum + (typeof value === "number" ? value : 0);
+      }, 0);
+
+    return {
+      ...dataPoint,
+      "Aggregate Speed": aggregateValue,
+    };
   });
 
   const chartLines = filteredAdapters
@@ -141,6 +165,23 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
         isAnimationActive={false} // Disable animation for better performance
       />
     ));
+
+  // Add aggregate speed line if enabled
+  if (showAggregateSpeed) {
+    chartLines.push(
+      <Line
+        key="Aggregate Speed"
+        type="monotone"
+        dataKey="Aggregate Speed"
+        stroke="#6b7280" // Gray color
+        strokeWidth={2}
+        dot={false}
+        activeDot={{ r: 6 }}
+        isAnimationActive={false}
+        strokeDasharray="4 4" // Dashed line to differentiate
+      />
+    );
+  }
 
   // Function to normalize names for comparison (case-insensitive, remove special chars)
   const normalizeName = (name: string): string => {
@@ -206,7 +247,7 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
   const renderChart = () => {
     const commonProps = {
       ref: chartRef,
-      data: displayData,
+      data: displayDataWithAggregate, // Use data with aggregate speed
       margin: { top: 5, right: 30, left: 50, bottom: 60 },
       style: { fontSize: 12 },
     };
@@ -263,6 +304,14 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
                   isAnimationActive={false}
                 />
               ))}
+            {showAggregateSpeed && (
+              <Bar
+                key="Aggregate Speed"
+                dataKey="Aggregate Speed"
+                fill="#6b7280"
+                isAnimationActive={false}
+              />
+            )}
           </BarChart>
         );
       case "area":
@@ -287,6 +336,19 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
                   isAnimationActive={false}
                 />
               ))}
+            {showAggregateSpeed && (
+              <Area
+                key="Aggregate Speed"
+                type="monotone"
+                dataKey="Aggregate Speed"
+                stroke="#6b7280"
+                fill="#6b7280"
+                fillOpacity={0.3}
+                strokeWidth={2}
+                strokeDasharray="4 4"
+                isAnimationActive={false}
+              />
+            )}
           </AreaChart>
         );
       case "line":
@@ -351,6 +413,24 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
           <p className="font-medium text-gray-700 mb-2">
             Active Network Adapters:
           </p>
+          {/* Aggregate Speed Toggle */}
+          <div className="flex items-center justify-between p-2 bg-gray-100 rounded border mb-2">
+            <div className="flex items-center">
+              <div className="w-4 h-4 rounded-full bg-gray-500 mr-2"></div>
+              <span className="font-medium text-sm">Aggregate Speed</span>
+            </div>
+            <div className="ml-2">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={showAggregateSpeed}
+                  onChange={toggleAggregateSpeed}
+                />
+                <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          </div>
           {filteredAdapters.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {filteredAdapters.map((adapter, index) => {
