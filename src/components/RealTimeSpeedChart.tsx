@@ -16,6 +16,22 @@ interface RealTimeSpeedChartProps {
   maxDataPoints?: number; // Maximum number of data points to display
 }
 
+// Function to format bytes to human-readable format (KB, MB, GB)
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 B/s';
+  
+  const k = 1024;
+  const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// Function to format bytes for Y-axis ticks
+const formatYAxis = (value: number): string => {
+  return formatBytes(value);
+};
+
 const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({ 
   updateInterval = 2000, // Update every 2 seconds
   maxDataPoints = 20 // Keep only last 20 data points
@@ -99,15 +115,16 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
               />
               <YAxis 
                 label={{ 
-                  value: 'Bytes per Second', 
+                  value: 'Speed', 
                   angle: -90, 
                   position: 'insideLeft',
                   style: { textAnchor: 'middle', fontSize: 12 }
                 }}
                 tick={{ fontSize: 10 }}
+                tickFormatter={formatYAxis}
               />
               <Tooltip 
-                formatter={(value) => [`${Number(value).toLocaleString()} bytes/s`, 'Speed']}
+                formatter={(value) => [formatBytes(Number(value)), 'Speed']}
                 labelFormatter={(label) => `Time: ${label}`}
                 contentStyle={{ fontSize: 12 }}
               />
