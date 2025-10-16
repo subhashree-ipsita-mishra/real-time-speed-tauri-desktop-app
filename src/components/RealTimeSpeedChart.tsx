@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -58,6 +62,9 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
   const [visibleAdapters, setVisibleAdapters] = useState<Set<string>>(
     new Set()
   );
+
+  // State for chart type
+  const [chartType, setChartType] = useState<"line" | "bar" | "area">("line");
 
   // Start monitoring and fetch adapters when component mounts
   useEffect(() => {
@@ -195,11 +202,132 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
     return "Unknown";
   };
 
+  // Function to render chart based on selected type
+  const renderChart = () => {
+    const commonProps = {
+      ref: chartRef,
+      data: displayData,
+      margin: { top: 5, right: 30, left: 50, bottom: 60 },
+      style: { fontSize: 12 },
+    };
+
+    const commonElements = (
+      <>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis
+          dataKey="timestamp"
+          angle={-45}
+          textAnchor="end"
+          height={70}
+          tick={{ fontSize: 10 }}
+        />
+        <YAxis
+          label={{
+            value: "Speed",
+            angle: -90,
+            position: "left",
+            offset: 20,
+            style: { textAnchor: "middle", fontSize: 12 },
+          }}
+          tick={{ fontSize: 10 }}
+          tickFormatter={formatYAxis}
+        />
+        <Tooltip
+          formatter={(value) => [formatBytes(Number(value)), "Speed"]}
+          labelFormatter={(label) => `Time: ${label}`}
+          contentStyle={{ fontSize: 12 }}
+        />
+        <Legend
+          layout="horizontal"
+          verticalAlign="top"
+          height={40}
+          wrapperStyle={{ paddingBottom: "10px", fontSize: 12 }}
+        />
+      </>
+    );
+
+    switch (chartType) {
+      case "bar":
+        return (
+          <BarChart {...commonProps}>
+            {commonElements}
+            {filteredAdapters
+              .filter((adapter) => visibleAdapters.has(adapter))
+              .map((adapter) => (
+                <Bar
+                  key={adapter}
+                  dataKey={adapter}
+                  fill={`hsl(${
+                    filteredAdapters.indexOf(adapter) * 137.5
+                  }, 70%, 50%)`}
+                  isAnimationActive={false}
+                />
+              ))}
+          </BarChart>
+        );
+      case "area":
+        return (
+          <AreaChart {...commonProps}>
+            {commonElements}
+            {filteredAdapters
+              .filter((adapter) => visibleAdapters.has(adapter))
+              .map((adapter) => (
+                <Area
+                  key={adapter}
+                  type="monotone"
+                  dataKey={adapter}
+                  stroke={`hsl(${
+                    filteredAdapters.indexOf(adapter) * 137.5
+                  }, 70%, 50%)`}
+                  fill={`hsl(${
+                    filteredAdapters.indexOf(adapter) * 137.5
+                  }, 70%, 50%)`}
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                  isAnimationActive={false}
+                />
+              ))}
+          </AreaChart>
+        );
+      case "line":
+      default:
+        return (
+          <LineChart {...commonProps}>
+            {commonElements}
+            {chartLines}
+          </LineChart>
+        );
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
-        Real-Time Network Speed
-      </h2>
+      {/* Chart header with title and chart type selector */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-gray-800">
+          Real-Time Network Speed
+        </h2>
+        <div className="relative">
+          <select
+            value={chartType}
+            onChange={(e) => setChartType(e.target.value as any)}
+            className="block appearance-none w-full bg-white border border-gray-300 hover:border-gray-400 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline text-sm"
+          >
+            <option value="line">Line Chart</option>
+            <option value="bar">Bar Chart</option>
+            <option value="area">Area Chart</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg
+              className="fill-current h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+            </svg>
+          </div>
+        </div>
+      </div>
 
       {speedError && (
         <div className="text-red-500 text-center mb-4">Error: {speedError}</div>
@@ -212,45 +340,7 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
       ) : (
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              ref={chartRef}
-              data={displayData}
-              margin={{ top: 5, right: 30, left: 50, bottom: 60 }} // Increased left margin from 30 to 50
-              // Optimize re-rendering
-              style={{ fontSize: 12 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="timestamp"
-                angle={-45}
-                textAnchor="end"
-                height={70} // Increased height for better timestamp display
-                tick={{ fontSize: 10 }}
-              />
-              <YAxis
-                label={{
-                  value: "Speed",
-                  angle: -90,
-                  position: "left",
-                  offset: 20, // Add offset to move label further left
-                  style: { textAnchor: "middle", fontSize: 12 },
-                }}
-                tick={{ fontSize: 10 }}
-                tickFormatter={formatYAxis}
-              />
-              <Tooltip
-                formatter={(value) => [formatBytes(Number(value)), "Speed"]}
-                labelFormatter={(label) => `Time: ${label}`}
-                contentStyle={{ fontSize: 12 }}
-              />
-              <Legend
-                layout="horizontal"
-                verticalAlign="top"
-                height={40}
-                wrapperStyle={{ paddingBottom: "10px", fontSize: 12 }}
-              />
-              {chartLines}
-            </LineChart>
+            {renderChart()}
           </ResponsiveContainer>
         </div>
       )}
