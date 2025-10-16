@@ -83,11 +83,34 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
     />
   ));
 
+  // Function to normalize names for comparison (case-insensitive, remove special chars)
+  const normalizeName = (name: string): string => {
+    return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  };
+
+  // Function to find matching adapter for a network stat by name/description
+  const getMatchingAdapter = (statName: string) => {
+    // First try exact name match
+    const exactMatch = adapters.find(adapter => 
+      normalizeName(adapter.Name) === normalizeName(statName)
+    );
+    if (exactMatch) return exactMatch;
+    
+    // Then try matching against InterfaceDescription
+    const descMatch = adapters.find(adapter => 
+      normalizeName(adapter.InterfaceDescription).includes(normalizeName(statName)) || 
+      normalizeName(statName).includes(normalizeName(adapter.InterfaceDescription))
+    );
+    if (descMatch) return descMatch;
+    
+    return null;
+  };
+
   // Function to get the appropriate icon for adapter type
   const getAdapterIcon = (adapterName: string) => {
-    const adapter = adapters.find(adapter => adapter.Name === adapterName);
-    if (adapter) {
-      const type = interfaceTypeToString(adapter.InterfaceType);
+    const matchingAdapter = getMatchingAdapter(adapterName);
+    if (matchingAdapter) {
+      const type = interfaceTypeToString(matchingAdapter.InterfaceType);
       switch (type) {
         case "WiFi":
           return <Wifi size={12} className="mr-1" />;
