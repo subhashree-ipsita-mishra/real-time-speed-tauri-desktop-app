@@ -4,6 +4,7 @@ import PowerShellCard from "./components/PowerShellCard";
 import TimeCard from "./components/TimeCard";
 import NetworkCard from "./components/NetworkCard";
 import NetworkAdapterCard from "./components/NetworkAdapterCard";
+import RealTimeSpeedChart from "./components/RealTimeSpeedChart";
 import { useSelectionStore } from "./store/selection-store";
 
 export default function App() {
@@ -18,6 +19,9 @@ export default function App() {
           <TimeCard />
           <NetworkCard />
           <NetworkAdapterCard />
+          <div className="lg:col-span-2">
+            <RealTimeSpeedChart />
+          </div>
         </div>
       );
     }
@@ -28,6 +32,7 @@ export default function App() {
       time: <TimeCard />,
       network: <NetworkCard />,
       adapter: <NetworkAdapterCard />,
+      speed: <RealTimeSpeedChart />,
     };
 
     return (
@@ -57,6 +62,7 @@ export default function App() {
             <option value="time">Time</option>
             <option value="network">Network</option>
             <option value="adapter">Network Adapters</option>
+            <option value="speed">Real-Time Speed</option>
           </select>
         </div>
       </div>

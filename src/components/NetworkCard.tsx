@@ -2,9 +2,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { useState, useEffect } from "react";
 
 export default function NetworkCard() {
-  const [networkStats, setNetworkStats] = useState<string>("Click the button to start");
+  const [networkStats, setNetworkStats] = useState<string>(
+    "Click the button to start"
+  );
   const [isTracking, setIsTracking] = useState<boolean>(false);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [intervalId, setIntervalId] = useState<number | null>(null);
 
   useEffect(() => {
     // Clean up interval when component unmounts
@@ -30,7 +32,7 @@ export default function NetworkCard() {
         // Get initial stats
         const initialStats = await invoke<string>("get_network_stats");
         setNetworkStats(initialStats);
-        
+
         // Set up interval to update stats every 2 seconds (network stats change frequently)
         const id = setInterval(async () => {
           try {
@@ -47,7 +49,7 @@ export default function NetworkCard() {
             }
           }
         }, 2000); // Update every 2 seconds
-        
+
         setIntervalId(id);
         setIsTracking(true);
       } catch (error) {
@@ -59,13 +61,19 @@ export default function NetworkCard() {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">Real-time Network Stats</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">
+        Real-time Network Stats
+      </h2>
       <pre className="text-sm text-center text-gray-600 mb-4 bg-gray-50 p-3 rounded overflow-x-auto max-h-32">
         {networkStats}
       </pre>
-      <button 
+      <button
         onClick={toggleNetworkTracking}
-        className={`${isTracking ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'} text-white font-medium py-2 px-4 rounded-lg w-full transition-colors duration-200`}
+        className={`${
+          isTracking
+            ? "bg-red-500 hover:bg-red-600"
+            : "bg-teal-500 hover:bg-teal-600"
+        } text-white font-medium py-2 px-4 rounded-lg w-full transition-colors duration-200`}
       >
         {isTracking ? "Stop Network Tracking" : "Start Network Tracking"}
       </button>
