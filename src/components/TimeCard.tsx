@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 export default function TimeCard() {
   const [time, setTime] = useState<string>("Click the button to start");
   const [isTracking, setIsTracking] = useState<boolean>(false);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     // Clean up interval when component unmounts
