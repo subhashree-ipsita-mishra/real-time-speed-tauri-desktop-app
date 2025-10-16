@@ -22,6 +22,9 @@ const getAdapterIcon = (adapterType: number) => {
 export default function NetworkAdapterCard() {
   const { adapters, isLoading, error, fetchAdapters, clearAdapters } = useNetworkAdapterStore();
 
+  // Log adapters data for debugging
+  console.log("NetworkAdapterCard adapters:", adapters);
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4 text-center">Network Adapters</h2>
