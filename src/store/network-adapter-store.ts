@@ -6,6 +6,7 @@ interface NetworkAdapter {
   InterfaceDescription: string;
   ifIndex: number;
   LinkSpeed: string;
+  InterfaceType: number; // Numeric interface type from PowerShell (e.g., 6 for Ethernet, 71 for WiFi)
 }
 
 interface NetworkStat {
@@ -51,17 +52,36 @@ function parseCSV(csvString: string): NetworkAdapter[] {
         return value.trim().replace(/^"|"$/g, ""); // Remove leading/trailing quotes
       });
 
-      if (cleanValues.length < 4) return null;
+      if (cleanValues.length < 5) return null;
 
       return {
         Name: cleanValues[0] || "",
         InterfaceDescription: cleanValues[1] || "",
         ifIndex: parseInt(cleanValues[2]) || 0,
         LinkSpeed: cleanValues[3] || "",
+        InterfaceType: parseInt(cleanValues[4]) || 0,
       };
     })
     .filter((adapter): adapter is NetworkAdapter => adapter !== null);
 }
+
+// Function to convert interface type to readable string
+export const interfaceTypeToString = (type: number): string => {
+  switch (type) {
+    case 6:   // Ethernet
+      return "Ethernet";
+    case 71:  // IEEE 802.11 Wireless LAN
+      return "WiFi";
+    case 24:  // Fast Ethernet (100Base-T)
+      return "Fast Ethernet";
+    case 62:  // WiMAX
+      return "WiMAX";
+    case 151: // WWANPP Interface
+      return "Cellular";
+    default:
+      return `Type ${type}`; // Generic type for unknown interface types
+  }
+};
 
 // Parse network stats from PowerShell output
 function parseNetworkStats(output: string): NetworkStat[] {
@@ -77,6 +97,15 @@ function parseNetworkStats(output: string): NetworkStat[] {
     return null;
   }).filter((stat): stat is NetworkStat => stat !== null);
 }
+
+// Function to get adapter type by name
+export const getAdapterType = (adapters: NetworkAdapter[], adapterName: string): string => {
+  const adapter = adapters.find(adapter => adapter.Name === adapterName);
+  if (adapter) {
+    return interfaceTypeToString(adapter.InterfaceType);
+  }
+  return "Unknown";
+};
 
 export const useNetworkAdapterStore = create<NetworkAdapterStore>()((set, get) => ({
   adapters: [],

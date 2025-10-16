@@ -5,8 +5,9 @@ use tauri::command;
 pub async fn get_network_adapters() -> Result<String, String> {
     // Get network adapters that are currently up using PowerShell
     // Output as CSV for easier parsing
+    // Added InterfaceType to identify if it's WiFi, Ethernet, etc.
     let output = Command::new("powershell")
-        .args(&["-Command", "Get-NetAdapter | Where-Object Status -eq 'Up' | Select-Object Name, InterfaceDescription, ifIndex, LinkSpeed | ConvertTo-Csv -NoTypeInformation"])
+        .args(&["-Command", "Get-NetAdapter | Where-Object Status -eq 'Up' | Select-Object Name, InterfaceDescription, ifIndex, LinkSpeed, InterfaceType | ConvertTo-Csv -NoTypeInformation"])
         .output()
         .map_err(|e| format!("Failed to execute PowerShell: {}", e))?;
 

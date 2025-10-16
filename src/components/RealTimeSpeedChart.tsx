@@ -9,7 +9,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useNetworkAdapterStore } from "../store/network-adapter-store";
+import { useNetworkAdapterStore, getAdapterType, interfaceTypeToString } from "../store/network-adapter-store";
+import { Wifi, EthernetPort, Radio, Smartphone } from "lucide-react";
 
 interface RealTimeSpeedChartProps {
   updateInterval?: number;
@@ -43,6 +44,7 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
     speedError,
     startMonitoring,
     stopMonitoring,
+    adapters,
   } = useNetworkAdapterStore();
 
   const [displayData, setDisplayData] = useState<any[]>([]);
@@ -80,6 +82,28 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
       isAnimationActive={false} // Disable animation for better performance
     />
   ));
+
+  // Function to get the appropriate icon for adapter type
+  const getAdapterIcon = (adapterName: string) => {
+    const adapter = adapters.find(adapter => adapter.Name === adapterName);
+    if (adapter) {
+      const type = interfaceTypeToString(adapter.InterfaceType);
+      switch (type) {
+        case "WiFi":
+          return <Wifi size={12} className="mr-1" />;
+        case "Ethernet":
+        case "Fast Ethernet":
+          return <EthernetPort size={12} className="mr-1" />;
+        case "Cellular":
+          return <Smartphone size={12} className="mr-1" />;
+        case "WiMAX":
+          return <Radio size={12} className="mr-1" />;
+        default:
+          return <Radio size={12} className="mr-1" />; // Default icon
+      }
+    }
+    return <Radio size={12} className="mr-1" />; // Default icon if adapter not found
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -150,14 +174,18 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
               {activeAdapters.map((adapter, index) => (
                 <span
                   key={index}
-                  className="inline-block px-2 py-1 bg-gray-100 rounded text-xs"
+                  className="inline-block px-2 py-1 bg-gray-100 rounded text-xs flex items-center"
                   style={{
                     borderLeft: `3px solid hsl(${
                       activeAdapters.indexOf(adapter) * 137.5
                     }, 70%, 50%)`,
                   }}
                 >
-                  {adapter}
+                  {getAdapterIcon(adapter)}
+                  <span>{adapter}</span>
+                  <span className="ml-1 text-[0.6rem] text-gray-500">
+                    ({getAdapterType(adapters, adapter)})
+                  </span>
                 </span>
               ))}
             </div>
