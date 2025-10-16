@@ -211,43 +211,46 @@ const RealTimeSpeedChart: React.FC<RealTimeSpeedChartProps> = ({
 
       {/* Network adapter list moved below the chart */}
       <div className="mt-6">
-        <div className="mb-2 text-sm">
-          <p className="font-medium text-gray-700">Active Network Adapters:</p>
+        <div className="text-sm">
+          <p className="font-medium text-gray-700 mb-2">Active Network Adapters:</p>
           {activeAdapters.length > 0 ? (
-            <div className="mt-1 flex flex-wrap gap-2">
+            <div className="space-y-2">
               {activeAdapters.map((adapter, index) => {
                 const matchingAdapter = getMatchingAdapter(adapter);
                 const icon = matchingAdapter ? getAdapterIcon(adapter) : 
-                             <Radio size={12} className="mr-1" />;
+                             <Radio size={16} className="mr-2 text-gray-500" />;
                 const type = matchingAdapter ? getAdapterTypeDisplay(adapter) : "Unknown";
                 
                 return (
-                  <span
+                  <div
                     key={index}
-                    className="inline-block px-2 py-1 bg-gray-100 rounded text-xs flex items-center"
+                    className="p-2 rounded border flex items-center justify-between bg-white"
                     style={{
-                      borderLeft: `3px solid hsl(${
+                      borderLeft: `4px solid hsl(${
                         activeAdapters.indexOf(adapter) * 137.5
                       }, 70%, 50%)`,
                     }}
                   >
-                    {icon}
-                    <div>
-                      <span>{adapter}</span>
-                      <span className="ml-1 text-[0.6rem] bg-gray-200 rounded px-1 py-0.5">
-                        {type}
-                      </span>
+                    <div className="flex items-center">
+                      {icon}
+                      <div>
+                        <span className="font-medium">{adapter}</span>
+                        <span className="ml-2 text-xs bg-gray-200 rounded px-2 py-0.5">
+                          {type}
+                        </span>
+                      </div>
                     </div>
-                  </span>
+                    <span className="text-xs text-gray-500">Active</span>
+                  </div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-gray-500 italic">No network adapters detected</p>
+            <p className="text-gray-500 italic py-2">No network adapters detected</p>
           )}
         </div>
 
-        <div className="flex justify-between items-center text-sm text-gray-600">
+        <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
           <div>
             <p>
               Update interval: {updateInterval / 1000}s | Max points:{" "}
